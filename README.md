@@ -15,7 +15,7 @@ Try it live here:
 - 📲 Or scan the QR code below to open it on your phone:
 
 <div align="center">
-  <img src="QR code.png" alt="eBay Sniper QR Code" width="150" />
+  <img src="QR Code.png" alt="eBay Sniper QR Code" width="150" />
 </div>
 
 ---
