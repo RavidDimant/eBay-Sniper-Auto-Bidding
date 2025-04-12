@@ -47,7 +47,7 @@ You can access the app via:
 - Or by scanning the QR code below:
 
 <div align="center">
-  <img src="QR code.png" alt="eBay Sniper QR Code" width="150" />
+  <img src="QR Code.png" alt="eBay Sniper QR Code" width="150" />
 </div>
 
 ---
