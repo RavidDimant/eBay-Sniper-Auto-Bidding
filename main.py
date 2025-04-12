@@ -128,7 +128,7 @@ def check_auction_result(browser):
 # ---------- Streamlit UI ----------
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    image = Image.open("C:/Users/user/PycharmProjects/MySniper/logo.png")
+    image = Image.open("logo.png")
     st.image(image, width=300)
 
 if 'step' not in st.session_state:
