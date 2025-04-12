@@ -8,6 +8,18 @@
 
 ---
 
+Want to experience what perfectly timed bidding feels like?
+Try it live here:
+
+- 🔗 [Launch the eBay Sniper App](https://ebay-sniper-auto-bidding-p7uicou8njpyntjvdkbzim.streamlit.app/)
+- 📲 Or scan the QR code below to open it on your phone:
+
+<div align="center">
+  <img src="QR code.png" alt="eBay Sniper QR Code" width="150" />
+</div>
+
+---
+
 ## 🔍 Background
 I often found myself either **forgetting to place a bid** on items I really wanted, or trying to be **strategically competitive**, only to miss out by a few seconds. This project solves both problems by automatically placing a bid at the perfect moment — without me needing to sit and watch the clock.
 
@@ -38,17 +50,6 @@ streamlit
 selenium
 pillow
 ```
-
----
-
-## 🛠️ How to Use
-You can access the app via:
-- This URL: [https://ebay-sniper-auto-bidding-p7uicou8njpyntjvdkbzim.streamlit.app/](https://ebay-sniper-auto-bidding-p7uicou8njpyntjvdkbzim.streamlit.app/)
-- Or by scanning the QR code below:
-
-<div align="center">
-  <img src="QR Code.png" alt="eBay Sniper QR Code" width="150" />
-</div>
 
 ---
 
