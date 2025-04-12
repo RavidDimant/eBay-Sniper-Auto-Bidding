@@ -1,4 +1,6 @@
-![eBay Sniper Logo](logo.png)
+<div align="center">
+  <img src="logo.png" alt="eBay Sniper Logo" width="300" />
+</div>
 
 # eBay Auction Sniper
 
@@ -8,6 +10,8 @@
 
 ## 🔍 Background
 I often found myself either **forgetting to place a bid** on items I really wanted, or trying to be **strategically competitive**, only to miss out by a few seconds. This project solves both problems by automatically placing a bid at the perfect moment — without me needing to sit and watch the clock.
+
+I believe this sniper is **safer than other tools** I found online — it does **not store usernames or passwords**, making it more secure for personal use.
 
 More than that, this project was made **for my father**, to help him save time and never miss a bid he truly cares about.
 
@@ -38,14 +42,13 @@ pillow
 ---
 
 ## 🛠️ How to Use
-1. Clone the repository
-2. Run the Streamlit app:
-   ```bash
-   streamlit run app.py
-   ```
-3. Sign in to eBay
-4. Enter the item URL, your bid amount, and how many seconds before the end you want to place it
-5. Let the sniper do the rest 💥
+You can access the app via:
+- This URL: [https://ebay-sniper-auto-bidding-p7uicou8njpyntjvdkbzim.streamlit.app/](https://ebay-sniper-auto-bidding-p7uicou8njpyntjvdkbzim.streamlit.app/)
+- Or by scanning the QR code below:
+
+<div align="center">
+  <img src="QR code.png" alt="eBay Sniper QR Code" width="150" />
+</div>
 
 ---
 
