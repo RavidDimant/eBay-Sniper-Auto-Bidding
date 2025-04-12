@@ -15,7 +15,7 @@ Try it live here:
 - 📲 Or scan the QR code below to open it on your phone:
 
 <div align="center">
-  <img src="QR Code.png" alt="eBay Sniper QR Code" width="150" />
+  <img src="QR code.png" alt="eBay Sniper QR Code" width="150" />
 </div>
 
 ---
@@ -50,6 +50,18 @@ streamlit
 selenium
 pillow
 ```
+
+---
+
+## ⚙️ How It Works
+You can enter the app using the link above and follow the simple interface to:
+- Sign in to your eBay account
+- Enter an item URL and your maximum bid
+- Specify how many seconds before the auction ends to place your bid
+
+⏳ The bot will monitor the listing and automatically submit your bid right on time.
+
+> **Note:** In order for the app to work correctly, you must close all open eBay windows on your device before starting.
 
 ---
 
