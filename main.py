@@ -2,6 +2,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from PIL import Image
 from time import sleep
 import streamlit as st
@@ -95,23 +97,29 @@ def get_seconds_until_end(browser):
 
 def place_bid(browser, bid_price):
     try:
+        # Step 1: Click the "Place bid" button
         place_bid_button = browser.find_element(By.XPATH, '//span[text()="Place bid"]/ancestor::button')
         place_bid_button.click()
-        sleep(2)
 
-        input_box = browser.find_element(By.CSS_SELECTOR, 'input[type="tel"].textbox__control')
+        # Step 2: Enter bid value
+        input_box = WebDriverWait(browser, 5).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, 'input[type="tel"].textbox__control'))
+        )
         input_box.clear()
         input_box.send_keys(str(bid_price))
-        sleep(1)
+        sleep(1.5)
 
-        bid_button = browser.find_element(By.XPATH, '//button[normalize-space()="Bid"]')
-        if bid_button.is_enabled():
-            bid_button.click()
+        # Step 3: Clicking on "Bid" button
+        bid_buttons = browser.find_elements(By.CSS_SELECTOR,
+                                            'div.place-bid-actions__submit > button.btn--fluid.btn--primary')
+        bid_button = next((btn for btn in bid_buttons if btn.text.strip() == "Bid"), None)
+        if bid_button and bid_button.is_enabled():
+            # bid_button.click()
             # for self-control
-            # st.write("Yayyyyyyyyyyy")
+            st.write("Yayyyyyyyyyyy")
             return True, "Bid submitted successfully!"
         else:
-            return False, "The 'Bid' button is not enabled because the bid value is too low."
+            return False, "Bid button not available or not enabled."
     except Exception as e:
         return False, f"Failed to place bid: {e}"
 
@@ -222,8 +230,8 @@ if st.session_state.step == 3:
         # ✅ Dynamically update the visible time left
         time_placeholder.write(f"Auction ends in {time_left} seconds")
 
-        # Note: it takes maximum ~9 seconds for the item's page to be refreshed
-        if time_left <= int(st.session_state.seconds_before_end) + 9:
+        # Note: it takes maximum ~10 seconds for the item's page to be refreshed
+        if time_left <= int(st.session_state.seconds_before_end) + 10:
             st.info("Time reached! Submitting your bid now...")
             success, msg = place_bid(st.session_state.browser, st.session_state.bid_price)
             if success:
