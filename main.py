@@ -8,6 +8,7 @@ from PIL import Image
 from time import sleep
 import streamlit as st
 import re
+import pandas as pd
 
 
 # ---------- Selenium functions ----------
@@ -114,9 +115,9 @@ def place_bid(browser, bid_price):
                                             'div.place-bid-actions__submit > button.btn--fluid.btn--primary')
         bid_button = next((btn for btn in bid_buttons if btn.text.strip() == "Bid"), None)
         if bid_button and bid_button.is_enabled():
-            # bid_button.click()
+            bid_button.click()
             # for self-control
-            st.write("Yayyyyyyyyyyy")
+            # st.write("Yayyyyyyyyyyy")
             return True, "Bid submitted successfully!"
         else:
             return False, "Bid button not available or not enabled."
@@ -126,7 +127,7 @@ def place_bid(browser, bid_price):
 
 def check_auction_result(browser):
     try:
-        sleep(7)
+        sleep(6)
         page_text = browser.page_source.lower()
         return "congratulations" in page_text
     except Exception:
@@ -189,73 +190,223 @@ if st.session_state.step == "verification":
         except Exception as e:
             st.error("Failed to verify the code.")
 
-# Step 2: Submit bid
-if st.session_state.step == 2 and st.session_state.signed_in:
-    item_url = st.text_input("Enter the eBay Item URL")
-    bid_price = st.text_input("Enter your Bidding Price")
-    seconds_before_end = st.number_input("Enter number of seconds before auction end to place bid",
-                                         min_value=5, max_value=3600)
 
-    if st.button("Submit my offer"):
-        valid, message = is_valid(st.session_state.browser, item_url, bid_price)
-        if not valid:
-            st.error(message)
+# Step 2: Submit bid (Modified for multiple items)
+if st.session_state.step == 2 and st.session_state.signed_in:
+    # Initialize items dictionary if not exists
+    if 'items_dict' not in st.session_state:
+        st.session_state.items_dict = {}
+    if 'current_item_index' not in st.session_state:
+        st.session_state.current_item_index = 0
+    if 'results_summary' not in st.session_state:
+        st.session_state.results_summary = []
+    
+    # Initialize input values in session state
+    if 'item_url_input' not in st.session_state:
+        st.session_state.item_url_input = ""
+    if 'bid_price_input' not in st.session_state:
+        st.session_state.bid_price_input = ""
+    
+    st.markdown("### Add Items to Bid On")
+    
+    # Display current items
+    if st.session_state.items_dict:
+        st.markdown("**Current Items:**")
+        for i, (url, price) in enumerate(st.session_state.items_dict.items()):
+            st.write(f"{i+1}. URL: {url[:50]}... | Bid Price: ${price}")
+    
+    # Input fields for new item
+    with st.form("add_item_form", clear_on_submit=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            item_url = st.text_input("Enter the eBay Item URL", value=st.session_state.item_url_input)
+        with col2:
+            bid_price = st.text_input("Enter your Bidding Price", value=st.session_state.bid_price_input)
+        submitted = st.form_submit_button("Add Item to List")
+    
+    # Add item button
+    if submitted:
+        if item_url and bid_price:
+            try:
+                # Validate the item before adding
+                valid, message = is_valid(st.session_state.browser, item_url, bid_price)
+                if valid:
+                    st.session_state.items_dict[item_url] = float(bid_price)
+                    st.success(f"✅ Item added successfully! {message}")
+                    st.rerun()
+                else:
+                    st.error(f"❌ Cannot add item: {message}")
+            except Exception as e:
+                st.error(f"❌ Error validating item: {str(e)}")
         else:
-            st.session_state.item_url = item_url
-            st.session_state.bid_price = bid_price
+            st.error("Please enter both URL and bid price")
+
+    
+    # Remove last item button
+    if st.session_state.items_dict and st.button("Remove Last Item"):
+        last_url = list(st.session_state.items_dict.keys())[-1]
+        del st.session_state.items_dict[last_url]
+        st.success("Last item removed")
+        st.rerun()
+    
+    # Clear all items button
+    if st.session_state.items_dict and st.button("Clear All Items"):
+        st.session_state.items_dict = {}
+        st.session_state.current_item_index = 0
+        st.session_state.results_summary = []
+        st.session_state.item_url_input = ""
+        st.session_state.bid_price_input = ""
+        st.success("All items cleared")
+        st.rerun()
+    
+    # Start bidding button
+    if st.session_state.items_dict:
+        seconds_before_end = st.number_input("Enter number of seconds before auction end to place bid",
+                                             min_value=5, max_value=3600)
+        
+        if st.button("Start Bidding on All Items"):
             st.session_state.seconds_before_end = seconds_before_end
-            st.info("✅ Offer submitted. Waiting for the right time to bid...")
+            st.session_state.current_item_index = 0
+            st.session_state.results_summary = []
+            st.info("✅ Starting bidding process...")
             st.session_state.step = 3
 
-# Step 3: Sniping
+
+# Step 3: Sniping (Modified for multiple items)
 if st.session_state.step == 3:
-    time_placeholder = st.empty()
-    while True:
-        # st.session_state.browser.get(st.session_state.item_url)
-        st.session_state.browser.refresh()
-        sleep(1.5)
+    # Get current item from dictionary
+    items_list = list(st.session_state.items_dict.items())
+    
+    if st.session_state.current_item_index < len(items_list):
+        current_url, current_bid_price = items_list[st.session_state.current_item_index]
+        
+        st.markdown(f"### Bidding on Item {st.session_state.current_item_index + 1} of {len(items_list)}")
+        # st.write(f"**URL:** {current_url}")
+        # st.write(f"**Bid Price:** ${current_bid_price}")
+        
+        time_placeholder = st.empty()
+        status_placeholder = st.empty()
+        
+        while True:
+            st.session_state.browser.get(current_url)
+            sleep(1.5)
 
-        valid, message = is_valid(st.session_state.browser,
-                                  st.session_state.item_url,
-                                  st.session_state.bid_price)
-        if not valid:
-            st.markdown("### 😢 You didn’t win this time, but keep going – the next one’s yours!")
-            break
+            valid, message = is_valid(st.session_state.browser, current_url, current_bid_price)
+            if not valid:
+                status_placeholder.markdown("### 😢 You didn't win this time, but keep going – the next one's yours!")
+                # Record result
+                st.session_state.results_summary.append({
+                    'url': current_url,
+                    'bid_price': current_bid_price,
+                    'result': 'X'
+                })
+                break
 
-        time_left, error = get_seconds_until_end(st.session_state.browser)
-        if error:
-            st.error(error)
-            break
+            time_left, error = get_seconds_until_end(st.session_state.browser)
+            if error:
+                status_placeholder.error(error)
+                # Record result
+                st.session_state.results_summary.append({
+                    'url': current_url,
+                    'bid_price': current_bid_price,
+                    'result': 'X'
+                })
+                break
 
-        # ✅ Dynamically update the visible time left
-        time_placeholder.write(f"Auction ends in {time_left} seconds")
+            # Dynamically update the visible time left
+            time_placeholder.write(f"Auction ends in {time_left} seconds")
 
-        # Note: it takes maximum ~10 seconds for the item's page to be refreshed
-        if time_left <= int(st.session_state.seconds_before_end) + 10:
-            st.info("Time reached! Submitting your bid now...")
-            success, msg = place_bid(st.session_state.browser, st.session_state.bid_price)
-            if success:
-                st.success(msg)
+            # Note: it takes maximum ~10 seconds for the item's page to be refreshed
+            if time_left <= int(st.session_state.seconds_before_end) + 10:
+                status_placeholder.info("Time reached! Submitting your bid now...")
+                success, msg = place_bid(st.session_state.browser, current_bid_price)
+                if success:
+                    status_placeholder.success(msg)
+                    # Check if we actually won the auction
+                    won_auction = check_auction_result(st.session_state.browser)
+                    # Record result based on actual auction outcome
+                    st.session_state.results_summary.append({
+                        'url': current_url,
+                        'bid_price': current_bid_price,
+                        'result': 'V' if won_auction else 'X'
+                    })
+                else:
+                    status_placeholder.error(msg)
+                    # Record result
+                    st.session_state.results_summary.append({
+                        'url': current_url,
+                        'bid_price': current_bid_price,
+                        'result': 'X'
+                    })
+                sleep(1)
+                break
+            elif time_left > 60:
+                sleep(5)
             else:
-                st.error(msg)
-            sleep(1)
+                sleep(1)
+        
+        # Move to next item
+        st.session_state.current_item_index += 1
+        
+        if st.session_state.current_item_index >= len(items_list):
             st.session_state.step = 4
-            break
-        elif time_left > 60:
-            sleep(5)
         else:
-            sleep(1)
-
-# Step 4: Check result
-if st.session_state.step == 4:
-    # Note: This check works best for last-second bidding.
-    # If you bid early, eBay may not immediately update the
-    # result, and you might see a "loss" message even if you eventually win.
-    won = check_auction_result(st.session_state.browser)
-    if won:
-        st.markdown("### 🎉 Congratulations! You won the auction!")
+            sleep(2)  # Brief pause before next item
+            st.rerun()
     else:
-        st.markdown("### 😢 You didn’t win this time, but keep going – the next one’s yours!")
+        st.session_state.step = 4
+
+# Step 4: Results Summary
+if st.session_state.step == 4:
+    st.markdown("### 🎯 Bidding Results Summary")
+    
+    if st.session_state.results_summary:
+        # Create results table
+        results_data = []
+        for i, result in enumerate(st.session_state.results_summary):
+            # Create clickable URL that opens in new tab
+            url_display = result['url'][:50] + '...' if len(result['url']) > 50 else result['url']
+            clickable_url = f'<a href="{result["url"]}" target="_blank">{url_display}</a>'
+            
+            results_data.append({
+                'Item #': i + 1,
+                'URL': clickable_url,
+                'Bid Price': f"${result['bid_price']}",
+                'Result': '✅ Won' if result['result'] == 'V' else '❌ Lost'
+            })
+        
+        df = pd.DataFrame(results_data)
+        # Use st.markdown with unsafe_allow_html=True to render HTML links
+        st.markdown(df.to_html(escape=False, index=False), unsafe_allow_html=True)
+        
+        # Summary statistics
+        total_items = len(st.session_state.results_summary)
+        won_items = sum(1 for r in st.session_state.results_summary if r['result'] == 'V')
+        lost_items = total_items - won_items
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Total Items", total_items)
+        with col2:
+            st.metric("Won", won_items, delta=f"{won_items/total_items*100:.1f}%" if total_items > 0 else "0%")
+        with col3:
+            st.metric("Lost", lost_items, delta=f"{lost_items/total_items*100:.1f}%" if total_items > 0 else "0%")
+        
+        # Overall message
+        if won_items > 0:
+            st.markdown("### 🎉 Congratulations! You won some auctions!")
+        else:
+            st.markdown("### 😢 Better luck next time! Keep trying!")
+        
+        # Reset button
+        if st.button("Start New Bidding Session"):
+            st.session_state.step = 2
+            st.session_state.items_dict = {}
+            st.session_state.current_item_index = 0
+            st.session_state.results_summary = []
+            st.rerun()
+    else:
+        st.info("No results to display")
 
 
 # Debug info
